@@ -1,0 +1,8 @@
+I tested the program with different kinds of arguments which included:
+	
+	1) Checked with both one and two arguments for temperature and wind velocity:
+		1) For both these arguments I checked out of bound cases
+		2) Extreme cases.
+		3) Non numeric cases
+	2) Checked with no arguments
+	3) Checked arguments with negative signs.

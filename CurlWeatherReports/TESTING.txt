@@ -1,0 +1,7 @@
+1) Different four letter normal codes
+2) Codes which were faulty in any of these ways:
+		1) Wrong case letters
+		2) Not letters
+		3) Incomplete number letters
+3) No code situation
+4) More than one code situation

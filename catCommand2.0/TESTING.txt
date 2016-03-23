@@ -1,0 +1,12 @@
+1) dog [invalid map]
+2) dog [invalid map] [non-existent file]
+3) dog [invalid switch] [non-existent file]
+4) dog [invalid option] [invalid map]
+
+	All the upper cases exited with a non-zero code
+
+5) dog [empty file]
+
+	printed nothing
+
+Tested all the above options on standard input with similar results

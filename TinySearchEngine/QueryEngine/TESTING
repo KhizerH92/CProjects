@@ -1,0 +1,15 @@
+Author: Khizar Hussain
+Tested Component : Query Engine
+
+After the tests have been done on the build of the Query Engine you run it and test it against a number of query arguments:
+
+	1) A query with operators at either the start or the end of the query
+		"Program tells you that operators at start or End are not allowed"
+	2) A query with numerical characters/ non-word charcters:
+		"Program tells the user that it will accept arguments of only letter types"
+	3) Query argument with operators right next to each other:
+		"Program alerts the user that it is not allowed and prompts you to give another query"
+	4) An empty query:
+		Program prompts the user to give valid arguments
+	5) Query that starts out with space characters:
+		Program tells the user that the query should not strat out with space character and prompts the user for another query

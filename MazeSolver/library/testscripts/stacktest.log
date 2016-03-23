@@ -1,0 +1,5 @@
+Author: Douglas Tallmadge
+Date: February 27th 2016
+
+No known issues running stack.c with the stacktest.c program.
+No memory leaks were observed.

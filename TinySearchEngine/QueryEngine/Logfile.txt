@@ -1,0 +1,46 @@
+
+The test was done at Sat Feb 27 23:26:57 EST 2016
+ 
+Following are the results for various tests being done: 
+ 
+Doing a clean build leads to 
+ 
+make[1]: Entering directory '/net/tahoe3/khizarhussain16/cs50/labs/Lab6'
+rm -rf ./util/*.o ./Lab4Crawler/*.o ./Lab5Indexer/*.o ./QueryEngine/Query ./Lab4Crawler/crawler ./Lab5Indexer/indexer ./util/libtseutil.a
+make[1]: Leaving directory '/net/tahoe3/khizarhussain16/cs50/labs/Lab6'
+make[1]: Entering directory '/net/tahoe3/khizarhussain16/cs50/labs/Lab6'
+gcc -c -o util/funcFile.o util/funcFile.c -std=c11 -Wall -pedantic -ggdb -lm -lcurl
+gcc -c -o util/hashtable.o util/hashtable.c -std=c11 -Wall -pedantic -ggdb -lm -lcurl
+gcc -c -o util/ANDORList.o util/ANDORList.c -std=c11 -Wall -pedantic -ggdb -lm -lcurl
+ar -cvq ./util/libtseutil.a ./util/*.o
+a - ./util/ANDORList.o
+a - ./util/funcFile.o
+a - ./util/hashtable.o
+gcc -o QueryEngine/Query util/funcFile.o util/hashtable.o util/ANDORList.o util/libtseutil.a -std=c11 -Wall -pedantic -ggdb -lm -lcurl ./QueryEngine/src/QueryEngine.c ./util/libtseutil.a -I./util
+make[1]: Leaving directory '/net/tahoe3/khizarhussain16/cs50/labs/Lab6'
+ 
+++++++++++++++++++++++++++++++++
+ 
+After clen build, test wrong number of arguments = fewer arguments
+ 
+Query is to be run with arguments as : ./query [Index data file] [crawler directory with URLS]
+ 
+++++++++++++++++++++++++++++++++
+ 
+After clen build, test wrong number of arguments = more arguments
+ 
+Query is to be run with arguments as : ./query [Index data file] [crawler directory with URLS]
+ 
+++++++++++++++++++++++++++++++++
+ 
+After clen build, test wrong number of arguments = more arguments
+ 
+Directory does not exist.
+ 
+++++++++++++++++++++++++++++++++
+ 
+Right nummber of arguments but wrong files leads to: 
+ 
+File of indexed words doesn't exist.
+ 
+++++++++++++++++++++++++++++++++

@@ -1,0 +1,522 @@
+***Query Design Spec***
+-------------------------
+Author : KHIZAR HUSSAIN
+
+In the following Design Module we describe the input, data flow, and output specification
+for the Query module. The pseudo code for Query module is also given.
+
+The Design Spec will include:
+
+(1) Input: Any inputs to the module
+(2) Output: An outputs of the module
+(3) Data Flow: Any data flow through the module
+(4) Data Structures: Major data structures used by the module
+(5) Pseudo Code: Pseudo code description of the module.
+
+Here is how we define the inputs, outputs and the major data flow through the Query module.
+
+(1) *Input*
+ 
+Command Input
+
+./query [.dat FILE] [Target Directory for crawler files] 
+
+Example command input
+
+./query ./index.dat ../crawler/levelx/
+
+[Target Directory for crawler files] ./data/crawler/
+Requirement: The path must be valid and it should contain the files we need to obtain the html addresses
+Usage: The Query will inform the user if path is not found or is invalid
+
+[.dat files] ./~.dat
+Requirement: The files must exist and be accessible and in the correct format to be workable
+Usage: Query will use the file to form the hastable and if the file is empty, it won't find any queries.
+
+(2) *Output*
+
+For each set of files provided by the crawler and the index created from the webpages in those files, the Query program will process a user's query which is basically
+the words combinations that the user wants to look up and return a ranked list of the pages with highest frequency of those word combinations to least frequency
+
+3) *Data Flow*
+
+The program takes the data file provided in the arguments and makes a hashtable using the words and frequencies in that file. This is the table that is used to look up all the words in the word combinations provided by the user.
+
+Once the hashtable for lookup is there, the program proceeds to process the queries given by the user.
+
+The queries are processed so as to delineate what sort of word combinations we are looking for. For instance it breaks up the query argument into different OR blocks
+that are to be treated independently as per the nature of 'OR' operator. It breaks query along OR blocks into different lines that will be treated as 'AND'ed items and whose results will be combined
+
+So basically at the end of query processing, we know if the query is valid, that is it doesn't have messed up operator sequences or non-words in it. Also it returns to the rest of the program a string buffer that can be used line by line to answer the query.
+
+Then the program goes through the string buffer line by line and looks up the words in each line and adds them to a linked list. From this linked list, only the documets that had instances of all the ANDed items are retrieved and added to a final list. In pseudocode we will discuss how that is being done.
+
+Once we have the FINAL MAJOR LIST, the program sorts that list based on frequencies from highest to lowest and then the program prints output to the screen after looking up what htmls each of those Document IDs correspond to.
+
+These html addresses or URLs are gotten from an array that is built after processing the files in the crawler directory provided.
+
+
+(4) *Data Structures*
+---------------------
+        
+        GenHashTable - We require an efficient data structure for the construction of the word Index from the data file to look up word combinations.
+
+		ListNodes [MAJORListNode and INNERListNode] There is two different types of nodes. We need the inner list node with one extra characterisitic called visited to keep track of how many of the ANDed items in a block were present in that list node. Based on that we return the list nodes and that gives us the final list in the end. We don't however need that extra trait for our Final list
+
+		DocumentNode - Contains information about the document ID of the document in which the word was found as well as the frequency of that word in that document.
+        WordNode - Is what the hashtable node points to. This contains the word being looked up as well as a pointer to list holding the Document IDs and frequency information
+
+
+Next, the algorithmic flow of the program is presented as pseudo code:
+
+(5) *Query* Pseudocode
+------------------------
+    // check command line arguments
+    Inform the user if the number arguments is wrong or if any of the arguments provided is not right to run the query. The program exits at this level if something is wrong with a message.
+
+    //Check that the second argument is a file that exists and is accessible
+    IF the file doesn't exist or isn't accessible inform the user and exit
+
+
+    IF target_directory for crawler files does not exist THEN Inform user that the directory or the directory path is not valid
+
+    //Build the look up hashtable
+    If the file provided in the second argument is fine then the program builds the LookUp table from that file.
+
+    //Prompt the user to put in a query
+
+    //Get that query and Process it:
+        The processing of the query involves doing a number of things to the query:
+        1)Check if it is an empty query and if it is give a message and exit
+        2) if the first character is a space tell the user to fix that
+        3) Then you take the query token by token and write the tokens into an array split by space
+        4) Once we have the array we can easily perform a number of checks ont he tokens:
+            a) Check that the query doesn't begin or end with an operator
+            b) Check that none of the arguments are numbers or non-words
+        5) Once we now that the query is fine, we start writing everything but the operators into a string buffer to be used later by the program. As stuff is written into the buffer we hae to make sure that the stuff is turned to lower case.
+        6) Then the buffer is returned to the main program.
+
+    // Parse the String buffer returned line by line and token by token to look them up:
+        1) You take each line and break it down for it's tokens
+        2) You take each of the tokens and look it up in the hashtable and add it's docs and frequencies to an 'inner list' which keeps track of the ANDed items for any OR block
+        3) The inner list nodes keep track of the number of words that they were 'populated' by.
+
+    //You get the list nodes which were visited the same number of times as the number of tokens in the OR block and add them to the Major list outside.
+
+    NOTE: If one of the ANDed items was not found in the hashtable then the maximum 'node visited' value will be lower than the count of the ANDed items and hence that whole OR block will be discarded which is exactly what we want.
+
+    //Once we have the MAJOR List of all the document IDs and Frequencies we can use the frequency measure to sort this list from most frequent to least and then once we have done that:
+        1) You take each of the list nodes
+        2) Look up the url based on the DOC-ID
+        3) And print the document ID and the url to the screen
+
+    //Free all the allocated memory after running all the processes from the major data structures to avoid memory leaks or memory lost.
+
+
+Implementation Spec
+
+Given the Design Spec above we go the next level of detail with the Implementation Spec. The Implementation Spec is language specific. It should compile without errors or warnings. It should present the code to implement the abstract data type of the Indexer - i.e., the detailed data structures and the functions that operate on the data. 
+
+***Indexer Implementation Spec***
+---------------------------------
+
+In this implementation specification we define the prototypes and data structures
+in details. It defines the abstract data types for the Indexer design module.
+This specification should describe code that should compile without errors as the Indexer.
+
+The "top" header file common.h includes common stuff:
+
+(1) Handy constants and macros
+(2) Definition of major data structures and important global variables
+Let's begin with the detailed language dependent data structures.
+
+
+/*(2) *DATA STRUCTURES AND VARIABLES*
+ *
+ * DATA STRUCTURES. In general, these structures should be 
+ * 				   dynamically allocated at run time.
+ *
+ */
+
+/* This is the key data structure for tracking document id and a word's frequency in that document */
+
+typedef struct DocumentNode{
+    struct DocumentNode *next;         // pointer to the next member of the list.
+    int doc_id;                        // document identifier
+    int freq;                          // number of occurrences of the word
+} DocumentNode;
+
+/* This is the key data structure for tracking a word's occurrence in all the files */
+
+typedef struct WordNode {
+    struct WordNode *next;   //pointer to the next word
+    char *word;                 //the word
+    DocumentNode *page;      // pointer to the first element of the page list
+} WordNode;
+
+/* General Hashtable data structure */
+
+typedef struct GenHashTableNode {
+    void *hashKey;                  // key Could be anything now
+    WordNode *wordNode;             //pointer to the word node list
+    struct GenHashTableNode *next;    // pointer to next node
+} GenHashTableNode;
+
+typedef struct HashTable {
+    GenHashTableNode *table[MAX_HASH_SLOT];     // actual hashtable
+} GenHashTable;
+
+/* These are two different types of listNodes that we use
+*       The difference is the presence or absence of 'visited' integer value
+*/
+
+typedef struct INNERListNode {
+    int DOC_ID;     //Document label/id/name
+    int Freq;   //frequency of instance of a word in the certain doc
+    int visited;     //keep track if a document has already been added     
+    struct INNERListNode *next;             // pointer to next node
+} INNERListNode;
+
+//Same as above without the visited value:
+typedef struct MAJORListNode {
+    int DOC_ID;  
+    int Freq;             // the data for a given page
+    struct MAJORListNode *next;                   // pointer to next node
+} MAJORListNode;
+
+
+typedef struct ANDORList {
+    INNERListNode *head;                          // "beginning" of the list
+} ANDORList;
+
+typedef struct MAJORList {
+    MAJORListNode *head;                          // "beginning" of the list
+} MAJORList;
+
+
+/*
+ * Somewhere we need to create all our primary variables 
+ * decide: static or dynamic?
+ */
+
+// ======== Some Linked list functions are given below ==========================
+
+int addWordNodeToInner(ANDORList* inner, WordNode* wordTo);
+
+//--------------------- Second Step to add to the Major List -----------------
+
+int addInnerToMajor(MAJORList* list, ANDORList* insider, int countVal);
+
+//Helper function to help in swapping:
+
+void swap(MAJORListNode* n1, MAJORListNode* n2);
+
+//SOrts the major list to be retruned in the end:
+
+void sortTheMajor(MAJORListNode* head); 
+
+//---------------------- Linked List cleaner functions are here------------------
+
+void freeList(INNERListNode* head)
+
+void freeMajorList(MAJORListNode* head)
+
+
+//--------------------------------------------------------------------------------
+
+//Hashtable Cleanup Function to be called within signal handler:
+
+int cleanHashTableOut(GenHashTable *table);
+
+-----------------------------------------------------------------------------------
+char *argBuffer;
+char *testedInput;
+GenHashTable* LookUpIndex;
+char** URLArray;
+
+MAJORList* Majorlist = NULL;
+ANDORList* Innerlist= NULL;
+
+void sighandler(int);
+
+int main(int argc, char **argv){
+    
+    //-------------making sure files and paths are valid ---------
+    checkArguments(argc,argv);
+    //------------------------------------------------------------
+
+
+    //====== This builds the index from the File provided:=========
+    FILE *reBuilt = fopen(argv[1],"r");
+    LookUpIndex = calloc(1, sizeof(GenHashTable));
+    reBuildFromFile(LookUpIndex, reBuilt);
+    fclose(reBuilt);
+    // ===========================================================
+    // =============== Process files in directory ================
+    int docID;
+    char **filenames;
+    int numOfFiles;
+    int counter=0;
+    FILE *fp;
+    //get the names and number of files using the function provided:
+    if((numOfFiles=GetFilenamesInDir(argv[2],&filenames))==-1 || numOfFiles==0){
+        printf("Something is wrong with Directory provided");
+        return 1;
+     }
+
+    //Create an array of URL addresses:
+
+    URLArray = calloc(BUFSIZ, sizeof(char*));
+
+    //Get filenames from the list and get the urls from their first line:
+
+     while(*filenames && counter<numOfFiles){
+
+        //We Use the document ID to index into the table to get URLs:
+
+        if((docID = GetDocumentID(filenames[counter]))==-1) {
+            free(filenames[counter]);
+            counter+=1;
+            continue;
+        }
+
+        //Create the file Location and get the files from:
+
+        char *fileLoc = constructPath(filenames[counter],argv[2]);
+
+        //Open the file write the first line into the buffer to create the array:
+
+        fp = fopen(fileLoc, "r");
+        char bufferDiscard[1000];
+        
+        
+        if(fgets(bufferDiscard, 1000, fp)!=NULL){
+            //printf("%d  %s\n", docID ,bufferDiscard);
+
+            // memset(URLArray[docID],'0',strlen(bufferDiscard)+1);
+
+            URLArray[docID] = calloc(strlen(bufferDiscard)+2, sizeof(char));
+            sprintf(URLArray[docID], "%s", bufferDiscard);
+            free(fileLoc);
+            free(filenames[counter]);
+            counter+=1;
+            fclose(fp);
+            continue;
+        }
+        //Free all the memory allocated and used:
+
+        free(fileLoc);
+        free(filenames[counter]);
+        counter+=1;
+        fclose(fp);
+    }
+    free(filenames);
+
+
+    //----------------------------------------------------------------
+    argBuffer = calloc(MAX_QUERY,sizeof(char));
+
+    signal(SIGINT, sighandler);
+
+    while(1){
+        fflush(stdin);
+
+        printf("Query:> ");
+
+        fgets(argBuffer, MAX_QUERY, stdin);
+
+        testedInput = processQueryString(argBuffer);
+
+        if(!testedInput){
+            continue;
+        }
+
+        //Variables that we require:
+
+        char *line;
+        char *word;
+        char *saveptr1; 
+        char *saveptr2;
+        Majorlist = calloc(1,sizeof(MAJORList));
+        Innerlist = calloc(1,sizeof(ANDORList));
+        
+        //initialize the major list:
+        init_Majorlist(Majorlist);
+
+        line = strtok_r(testedInput,"\n",&saveptr1);
+
+        while(line){
+
+            int ANDedCount = 0;
+
+            //initialize the inner list that holds ANDed blocks
+            init_Innerlist(Innerlist);
+            word = strtok_r(line," ", &saveptr2);
+
+            while(word){
+
+                ANDedCount += 1;
+
+                WordNode* wordToLook = getHashVal(LookUpIndex,word);
+                // if(addWordNodeToInner(Innerlist, wordToLook)==-1) continue; //in this current placement will go into an infinite loop
+                if(!wordToLook){
+                    printf("%s was not found in the index\n", word);
+                    word = strtok_r(NULL," ",&saveptr2);
+                    continue;
+                }
+
+                //if you find the word in the hashtable add it to the inner list:
+                addWordNodeToInner(Innerlist, wordToLook);
+
+                //Move on to the next word:
+                word = strtok_r(NULL," ",&saveptr2);
+            }
+
+            //Function filters the ANDed counter matching arguments and adds them to the main list to be returned
+            addInnerToMajor(Majorlist,Innerlist,ANDedCount);
+            
+            //================temporary list clearing solution ====
+            
+            //Free the inner list head.
+            freeList(Innerlist->head);
+
+            //Move on to the next line token
+            line = strtok_r(NULL,"\n",&saveptr1);
+
+        }
+
+
+        //==================Gotta think about the sorting of the list according to Freq ===========
+        if(!(Majorlist->head)){
+            freeMajorList(Majorlist->head); 
+            continue;
+        }
+
+        sortTheMajor(Majorlist->head);
+
+        //--------------------------------- Prints Out the Results of Query --------------------------
+        MAJORListNode* current = Majorlist->head;
+        while(current){
+            printf("%d  %s\n", current->Freq, URLArray[current->DOC_ID]);
+            current=current->next;
+
+        }
+
+        // ================ Free the major List ===================================================
+        if (Majorlist)freeMajorList(Majorlist->head);
+        Majorlist->head = NULL;
+        free(Innerlist);
+        Innerlist = NULL;
+        free(Majorlist);
+        Majorlist = NULL;
+
+    }
+}
+
+
+//========================== Signal Handler to handle abrupt quit =================
+
+void sighandler(int signum){
+   //printf("we get here\n");
+    for(int n=0;n<BUFSIZ;n++){
+        free(URLArray[n]);
+    }
+    free(URLArray);
+    free(testedInput);
+    free(argBuffer);
+    cleanHashTableOut(LookUpIndex);
+    free(LookUpIndex);
+
+    if(Majorlist && Majorlist->head) freeMajorList(Majorlist->head);
+    if(Innerlist)free(Innerlist);
+    if(Majorlist)free(Majorlist);
+
+
+    exit(1);
+}
+
+//=============================HELPER FUNCTIONS ARE GIVEN HERE ===================================
+
+//Check if a directory is valid and accessible:
+int IsDir(const char *path);
+
+//Check if a file is accessible and valid:
+int IsFile(const char *path);
+
+//Gets filenames from the given directory and adds them to an array:
+int GetFilenamesInDir(const char *dir, char ***filenames);
+//=================================================================================
+
+//=The metho tests if the query given is words only and not some unsavvy characters =====
+int checkAgainstNonAlpha(char *words);
+//==================== Borrowed NOrmalize Function ===============================
+void NormalizeWord(char *word);
+// ========================== Check and process query String ======================
+char *processQueryString(char *query);
+// ========================= Check all the strings in the files ===================
+ int isStringOk(char *testing);
+//========================= ARRAY FORMING FUNCTIONS ==============================
+int GetDocumentID(char* fileName);
+
+char* constructPath(char *fileadd, char* mainPath);
+//======================== Rebuild from file function ============================
+//Takes a file and makes a Lookup hashtable out of it:
+int reBuildFromFile(GenHashTable *hashTab, FILE *file);
+
+
+
+
+
+TESTING: 
+ 	1) Automated testing and logfile are given with the directory submission
+    2) Manual testing results of the engine itself are given in a file called TESTING
+
+    2) Program was run with Valgrind which led to an ouput:
+
+                valgrind --leak-check=full --show-leak-kinds=all RunQuery ../indexer/index3.dat ../crawler
+                ==92114== Memcheck, a memory error detector
+                ==92114== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
+                ==92114== Using Valgrind-3.10.1 and LibVEX; rerun with -h for copyright info
+                ==92114== Command: RunQuery ../indexer/index3.dat ../crawler
+                ==92114==
+                Query:> a OR b AND and
+
+                325  http://www.cs.dartmouth.edu/~cs50/tse/wiki/Dartmouth_College.html
+
+                258  http://www.cs.dartmouth.edu/~cs50/tse/wiki/Linked_list.html
+
+                233  http://www.cs.dartmouth.edu/~cs50/tse/wiki/Computer_science.html
+
+                215  http://www.cs.dartmouth.edu/~cs50/tse/wiki/C_(programming_language).html
+
+                206  http://www.cs.dartmouth.edu/~cs50/tse/wiki/C_(programming_language).html
+
+                202  http://www.cs.dartmouth.edu/~cs50/tse/wiki/Dartmouth_College.html
+
+                185  http://www.cs.dartmouth.edu/~cs50/tse/wiki/Hash_table.html
+
+                166  http://www.cs.dartmouth.edu/~cs50/tse/wiki/Unix.html
+
+                139  http://www.cs.dartmouth.edu/~cs50/tse/wiki/Linked_list.html
+
+                133  http://www.cs.dartmouth.edu/~cs50/tse/wiki/Hash_table.html
+
+                120  http://www.cs.dartmouth.edu/~cs50/tse/wiki/Computer_science.html
+
+                105  http://www.cs.dartmouth.edu/~cs50/tse/wiki/Unix.html
+
+                Query:> ^C==92114==
+
+                ==92114== HEAP SUMMARY:
+                ==92114==     in use at exit: 0 bytes in 0 blocks
+                ==92114==   total heap usage: 51,610 allocs, 51,610 frees, 1,660,416 bytes allocated
+                ==92114==
+                ==92114== All heap blocks were freed -- no leaks are possible
+                ==92114==
+                ==92114== For counts of detected and suppressed errors, rerun with: -v
+                ==92114== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+*	Thus showing good memory cleanup
+*
+*
+Document last modified: Feb 18 2016
